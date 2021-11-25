@@ -1,0 +1,156 @@
+---
+title: "Introducción a Tidydata y al uso de las funciones de pivot_longer y pivot_wider"
+author: "Antony Barja"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::robobook:
+    highlight: kate
+---
+
+```{r setup, include=FALSE, message=FALSE,eval=TRUE,echo=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = TRUE)
+knitr::opts_chunk$set(echo = TRUE,fig.width = 10,fig.height = 10)
+library(tidyverse)
+```
+
+# 🔴 1. Introducción a tidydata 
+
+![Fig.01: Julie Lowndes y Allison Horst, 2020, Tidy data for Efficiency, Reproducibility, and Collaboration](https://www.openscapes.org/img/blog/tidydata/tidydata_7.jpg)
+
+Dentro de cualquier análisis estadístico el mayor tiempo destinado está en función al ordenamiento y entendimiento de los datos.
+Tener datos ordenados (**tidydata**) significa tener una base datos con estructuras adecuadas, donde cada registro representa una fila, cada variable representa una columna y cada celda contiene una simple medida ([**Hadley Wickham,2014**](https://www.jstatsoft.org/article/view/v059i10)). En la siguiente imagen se adjunta una infografía donde se detalla este concepto.
+
+![Fig.02: Julie Lowndes y Allison Horst, 2020, Tidy data for Efficiency, Reproducibility, and Collaboration](https://www.openscapes.org/img/blog/tidydata/tidydata_1.jpg)
+
+Sin embargo un tidydata puede estar representado en multiples formas, y esto lo podemos observar en las siguientes estructuras.
+
+```{r eval=FALSE}
+table1
+#> # A tibble: 6 x 4
+#>   country      year  cases population
+#>   <chr>       <int>  <int>      <int>
+#> 1 Afghanistan  1999    745   19987071
+#> 2 Afghanistan  2000   2666   20595360
+#> 3 Brazil       1999  37737  172006362
+#> 4 Brazil       2000  80488  174504898
+#> 5 China        1999 212258 1272915272
+#> 6 China        2000 213766 1280428583
+table2
+#> # A tibble: 12 x 4
+#>   country      year type           count
+#>   <chr>       <int> <chr>          <int>
+#> 1 Afghanistan  1999 cases            745
+#> 2 Afghanistan  1999 population  19987071
+#> 3 Afghanistan  2000 cases           2666
+#> 4 Afghanistan  2000 population  20595360
+#> 5 Brazil       1999 cases          37737
+#> 6 Brazil       1999 population 172006362
+#> # … with 6 more rows
+table3
+#> # A tibble: 6 x 3
+#>   country      year rate             
+#> * <chr>       <int> <chr>            
+#> 1 Afghanistan  1999 745/19987071     
+#> 2 Afghanistan  2000 2666/20595360    
+#> 3 Brazil       1999 37737/172006362  
+#> 4 Brazil       2000 80488/174504898  
+#> 5 China        1999 212258/1272915272
+#> 6 China        2000 213766/1280428583
+
+# Spread across two tibbles
+table4a  # cases
+#> # A tibble: 3 x 3
+#>   country     `1999` `2000`
+#> * <chr>        <int>  <int>
+#> 1 Afghanistan    745   2666
+#> 2 Brazil       37737  80488
+#> 3 China       212258 213766
+table4b  # population
+#> # A tibble: 3 x 3
+#>   country         `1999`     `2000`
+#> * <chr>            <int>      <int>
+#> 1 Afghanistan   19987071   20595360
+#> 2 Brazil       172006362  174504898
+#> 3 China       1272915272 1280428583
+```
+
+Finalmente, tener un tidydata nos permite tener muchas ventajas desde ser más **eficientes** en nuestro análisis,tener una mayor facilidad al momento de **colaborar** con multiples usarios y realizar practicas de **reproducibilidad**.
+
+![Fig.03: Julie Lowndes y Allison Horst, 2020, Tidy data for Efficiency, Reproducibility, and Collaboration](https://www.openscapes.org/img/blog/tidydata/tidydata_6.jpg)
+
+
+# 🔴 2. Manipulando datos desordenados para optener datos en estructura tidy
+
+Para este ejemplo usaremos una base de datos que contiene casos de personas fallecidas a causa del coranovirus a nivel de país, este dataset está alojada en el siguiente repositorio de GitHub ([click aquí](https://github.com/CSSEGISandData/COVID-19)) del Portal de datos abiertos.
+
+![Fig. 04: Personas fallecidas por coranovirus a nivel global](https://user-images.githubusercontent.com/23284899/143327753-90b98071-13cf-408f-a53a-234524c96af5.png)
+
+
+## ✅ 2.1 Lectura de datos 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+data <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+```
+
+```{r echo=TRUE}
+head(data)
+```
+
+Como podemos observar tenemos un conjunto de datos donde las fechas están almacenas como columnas, esté debería estár almacenado en una sola columna llamada años y cada país debería tener la suma total de personas fallecidas. Para estructurar los datos de forma correcta usaremos dos funciones estás son `pivot_longer()` y `pivot_wider()`.
+
+![Fig. 05: Infografía de pivot realizado por Dr. Peter D.R. Higgins](https://user-images.githubusercontent.com/13680616/78810457-61239a80-7996-11ea-9466-13e72e3c5db3.png)
+
+
+## ✅ 2.2 Untidy data ▶ tidydata 
+La funcion pivot_longer convierte los datos de un formato ancho a uno largo
+
+[Fig. 06: Transformación de datos,2021,Data Analytics Coding Fundamentals ( ](https://bookdown.org/martin_monkman/DataAnalyticsCodingFundamentals/static/img/tidyr-pivot_wider_longer.gif)
+
+```{r}
+data %>% 
+  pivot_longer(
+    cols = !c("Province/State","Country/Region","Lat","Long"),
+    names_to = "years",
+    values_to = "fallecidos",
+    values_drop_na = TRUE 
+    ) %>% 
+  head()
+```
+
+De está estructura de datos podemos notar que en la primera columna presenta datos faltantes (`NA`), para remover usaremos la función `drop_na` especificando el nombre de la columna.  
+
+```{r}
+data %>% 
+  pivot_longer(
+    cols = !c("Province/State","Country/Region","Lat","Long"),
+    names_to = "years",
+    values_to = "fallecidos",
+    values_drop_na = TRUE 
+    ) %>% 
+  drop_na(`Province/State`) -> data_long
+data_long
+```
+
+Ahora de este formato largo podemos pasar a un formato ancho usando la función `pivot_wider`.
+
+
+```{r}
+data_long %>% 
+  pivot_wider(
+    names_from = years,
+    values_from = fallecidos) -> data_wide
+data_wide
+```
+
+## 🔴 Referencias 
+
+- Wickham, H. . (2014). Tidy Data. Journal of Statistical Software, 59(10), 1–23. https://doi.org/10.18637/jss.v059.i10
+
+- Derek Corcoran,2019,Manipulación de datos e investigación reproducible en R, https://bookdown.org/content/3515/tidydata.html
+
+- The Ocean Health Index Team, 2019,Introduction to Open Data Science,http://ohi-science.org/data-science-training/
+
+- Openscapes, 2020, https://www.openscapes.org/blog/2020/10/12/tidy-data/
+
+- Martin Monkman,2021,Data Analytics Coding Fundamentals (BIDA302),https://bookdown.org/martin_monkman/DataAnalyticsCodingFundamentals/
