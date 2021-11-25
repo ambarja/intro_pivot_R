@@ -105,7 +105,8 @@ Como podemos observar tenemos un conjunto de datos donde las fechas están almac
 ## ✅ 2.2 Untidy data ▶ tidydata 
 La funcion pivot_longer convierte los datos de un formato ancho a uno largo
 
-[Fig. 06: Transformación de datos,2021,Data Analytics Coding Fundamentals ( ](https://bookdown.org/martin_monkman/DataAnalyticsCodingFundamentals/static/img/tidyr-pivot_wider_longer.gif)
+<img src="https://bookdown.org/martin_monkman/DataAnalyticsCodingFundamentals/static/img/tidyr-pivot_wider_longer.gif" width="100%"><br/><p align="center" styles="font-size:90%;"><i>Fig. 06: Transformación de datos,2021,Data Analytics Coding Fundamentals</i></p>
+
 
 ```{r}
 data %>% 
