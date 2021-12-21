@@ -1,0 +1,133 @@
+---
+title: "Introducción a mutate, group_by y summarise"
+author: "Antony Barja"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::robobook:
+    highlight: kate
+---
+
+```{r setup, include=FALSE, message=FALSE,eval=TRUE,echo=FALSE}
+## Global options
+knitr::opts_chunk$set(cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE,fig.width = 10,fig.height = 10)
+library(tidyverse)
+```
+
+## 🔴 Mutate 
+
+<img src="https://d33wubrfki0l68.cloudfront.net/ee965db8c32a9661bfc092cb8ae1a81b74cd3696/8695c/blog/artist-in-residence/dplyr_mutate_hub0b4a69d83330f746f90015023d77693_769640_2220x0_resize_box_2.png" height="300px">
+
+Función de `dplyr` que nos permite agregar o modificar las variables actuales en un conjunto de datos.
+Este mismo nos permite crear varias columnas a la vez, separando con una coma cada nueva variable, asimimo puedes usar otras funciones internas dentro de mutate para crear nuevas variables [**(Y. Wendy Huynh,2019).**](https://bookdown.org/yih_huynh/Guide-to-R-Book/mutate.html)
+
+### Ejemplo práctico 
+
+Para este ejemplo usaremos una base de datos que contiene casos de personas fallecidas a causa del coranovirus a nivel de país, este dataset está alojada en el siguiente repositorio de GitHub [(click aquí)](https://github.com/CSSEGISandData/COVID-19) del Portal de datos abiertos.
+
+<img src="https://user-images.githubusercontent.com/23284899/143327753-90b98071-13cf-408f-a53a-234524c96af5.png" width="100%">
+
+
+#### Lectura de datos 
+
+```{r message=FALSE,warning=FALSE}
+data <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv")
+head(data)
+```
+
+#### Mutate para renombrar variables existentes
+
+```{r}
+newdata1 <- data %>% 
+  mutate(
+    Pais = `Country/Region`,
+    Latitud = Lat,
+    Longitud = Lat) %>% 
+  select(Pais, Latitud, Longitud)
+newdata1
+```
+
+### Mutate para crear nuevas columnas 
+
+```{r}
+newdata2 <- newdata1 %>% 
+  mutate(Peligro = "COVID-19")
+newdata2
+```
+
+### Observación: La función `Mutate` presenta algunas variantes entre ellas tenemos a: 
+
+ - `mutate_all`  
+ - `mutate_if`   
+ - `mutate_each` 
+ - `mutate_at`   
+
+## 🔴 Group by
+
+<img src="https://bookdown.org/PoMingChen/Dplyr_minicourse/graph/group_by.png" align="center">
+
+Función de `dplyr` que nos permite generar estadísticas resumidas a partir del agrupamiento de variables especificas, está función trabaja de forma cojunta con la función summarise.
+
+### Observación: La función `Group by` presenta alguna variantes, estás son:
+
+- `group_by_all`
+- `group_by_at`
+- `group_by_if`
+- `group_by_prepare`
+
+## 🔴 Summarise 
+Función de `dplyr` que trabaja de forma conjunta con group_by para obtener nuevos resumen en función al agrupamiento de filas.
+
+### Observación: La función `Group by` presenta alguna variantes, estás son:
+
+- `summarise_all`
+- `summarise_at`
+- `summarise_if`
+- `summarise_each`
+- `summarise_coord`
+
+## 🔴 Integración de Group_by + summarise
+
+<img src="https://rsanchezs.gitbooks.io/rprogramming/content/chapter9/groupbySummarise.PNG" width="100%">
+
+### Ejemplo práctico
+
+Ordenamos la data de covid19 para todo los paises en un formato tidy usando la función `pivot_longer`
+
+```{r}
+tidydata <- data %>% 
+  pivot_longer(
+    cols = !c("Province/State","Country/Region","Lat","Long"),
+    names_to = "years",
+    values_to = "fallecidos",
+    values_drop_na = TRUE 
+    )
+```
+
+Ahora calculamos los valores **max**, **minimos**, **promedios** y **sd** hasta la fecha actual para cada el país de Perú usando la función `group_by` y `summarise`
+
+```{r}
+tidydata %>% 
+  filter(`Country/Region` =="Peru") %>% 
+  group_by(`Country/Region`) %>% 
+  summarise(
+    total_max  = max(fallecidos,na.rm = TRUE),
+    total_min  = min(fallecidos,na.rm = TRUE),
+    total_mean = mean(fallecidos),
+    tota_sd    = sd(fallecidos,na.rm = TRUE)
+    ) %>% 
+  arrange(desc(total_max))
+```
+
+
+## 🔴 Referencias 
+
+- Iosu Paradinas, Curso de R base, 2021, *https://bookdown.org/paradinas_iosu/CursoR/*
+
+- Y.Wendy Huynh,R for Graduate Students,2019, *https://bookdown.org/yih_huynh/Guide-to-R-Book/*
+
+- Roger D. Peng,R Programming for Data Science,2020,*https://bookdown.org/rdpeng/rprogdatascience/*
+
+- The Ocean Health Index Team,Introduction to Open Data Science,2019,*https://ohi-science.org/data-science-training/*
+
+- Rubén Sánchez Sancho,Programación con R,*https://rsanchezs.gitbooks.io/rprogramming/content/index.html*
